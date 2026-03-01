@@ -2,12 +2,21 @@ name: Snowflake CI/CD Deployment
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
+    # We define the variables here so EVERY step below can see them
+    env:
+      SNOWFLAKE_CONNECTIONS_DEFAULT_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+      SNOWFLAKE_CONNECTIONS_DEFAULT_USER: ${{ secrets.SF_USER }}
+      SNOWFLAKE_CONNECTIONS_DEFAULT_PASSWORD: ${{ secrets.SF_PASSWORD }}
+      SNOWFLAKE_CONNECTIONS_DEFAULT_ROLE: ${{ secrets.SF_ROLE }}
+      SNOWFLAKE_CONNECTIONS_DEFAULT_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+      SNOWFLAKE_CONNECTIONS_DEFAULT_DATABASE: ${{ secrets.SF_DATABASE }}
+      SNOWFLAKE_CONNECTIONS_DEFAULT_SCHEMA: ${{ secrets.SF_SCHEMA }}
 
     steps:
       - name: Checkout Repository
@@ -16,31 +25,18 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install Snowflake CLI
         run: pip install snowflake-cli-labs
 
-      - name: Configure Snowflake Connection
-        run: |
-          snow connection add \
-            -n TEST \
-            -a "${{ secrets.TEST_ACCOUNT }}" \
-            -u "${{ secrets.TEST_USER }}" \
-            -p "${{ secrets.TEST_PASSWORD }}" \
-            -r "${{ secrets.TEST_ROLE }}" \
-            -w "${{ secrets.TEST_WAREHOUSE }}" \
-            -d "${{ secrets.TEST_DATABASE }}" \
-            --default
-
       - name: Test Snowflake Connection
-        run: snow sql -c TEST -q "SELECT CURRENT_DATABASE(), CURRENT_SCHEMA(), CURRENT_ROLE();"
+        run: snow connection test
 
-      - name: Deploy All SQL Scripts in Folder
+      - name: Deploy SQL Scripts
         run: |
           set -e
-          echo "Deploying all SQL scripts from sql/schemas/"
           for file in sql/schemas/*.sql; do
-            echo "Executing $file ..."
-            snow sql -c TEST -f "$file" --verbose
+            echo "Executing $file..."
+            snow sql -f "$file"
           done
