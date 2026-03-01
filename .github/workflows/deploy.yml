@@ -8,8 +8,12 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    # We define the variables here so EVERY step below can see them
+    # 1️⃣ THIS IS THE KEY: Point to your specific GitHub Environment
+    environment: TEST
+
     env:
+      SNOWFLAKE_DEFAULT_CONNECTION_NAME: default
+      # GitHub will now look in the "production" environment for these:
       SNOWFLAKE_CONNECTIONS_DEFAULT_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
       SNOWFLAKE_CONNECTIONS_DEFAULT_USER: ${{ secrets.SF_USER }}
       SNOWFLAKE_CONNECTIONS_DEFAULT_PASSWORD: ${{ secrets.SF_PASSWORD }}
