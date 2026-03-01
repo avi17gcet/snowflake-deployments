@@ -10,38 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1 — Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Step 2 — Setup Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      # Step 3 — Install Snowflake CLI
       - name: Install Snowflake CLI
         run: pip install snowflake-cli-labs
 
-      # Step 4 — Configure Snowflake Connection using GitHub Secrets
       - name: Configure Snowflake Connection
         run: |
           snow connection add \
-            --name TEST \
-            --account "${{ secrets.TEST_ACCOUNT }}" \
-            --user "${{ secrets.TEST_USER }}" \
-            --password "${{ secrets.TEST_PASSWORD }}" \
-            --role "${{ secrets.TEST_ROLE }}" \
-            --warehouse "${{ secrets.TEST_WAREHOUSE }}" \
-            --database "${{ secrets.TEST_DATABASE }}" \
+            -n TEST \
+            -a "${{ secrets.TEST_ACCOUNT }}" \
+            -u "${{ secrets.TEST_USER }}" \
+            -p "${{ secrets.TEST_PASSWORD }}" \
+            -r "${{ secrets.TEST_ROLE }}" \
+            -w "${{ secrets.TEST_WAREHOUSE }}" \
+            -d "${{ secrets.TEST_DATABASE }}" \
             --default
 
-      # Step 5 — Test the connection
       - name: Test Snowflake Connection
         run: snow sql -c TEST -q "SELECT CURRENT_DATABASE(), CURRENT_SCHEMA(), CURRENT_ROLE();"
 
-      # Step 6 — Deploy all SQL scripts in the folder
       - name: Deploy All SQL Scripts in Folder
         run: |
           set -e
