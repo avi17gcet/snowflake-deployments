@@ -9,15 +9,6 @@ jobs:
     runs-on: ubuntu-latest
     environment: TEST
 
-    env:
-      SNOWFLAKE_CONNECTIONS_DEFAULT_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_USER: ${{ secrets.SF_USER }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_PASSWORD: ${{ secrets.SF_PASSWORD }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_ROLE: ${{ secrets.SF_ROLE }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_DATABASE: ${{ secrets.SF_DATABASE }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_SCHEMA: ${{ secrets.SF_SCHEMA }}
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -29,6 +20,18 @@ jobs:
 
       - name: Install Snowflake CLI
         run: pip install snowflake-cli
+
+      # 🔥 Explicitly create connection
+      - name: Create Snowflake Connection
+        run: |
+          snow connection add default \
+            --account "${{ secrets.SF_ACCOUNT }}" \
+            --user "${{ secrets.SF_USER }}" \
+            --password "${{ secrets.SF_PASSWORD }}" \
+            --role "${{ secrets.SF_ROLE }}" \
+            --warehouse "${{ secrets.SF_WAREHOUSE }}" \
+            --database "${{ secrets.SF_DATABASE }}" \
+            --schema "${{ secrets.SF_SCHEMA }}"
 
       - name: Test Snowflake Connection
         run: snow connection test --connection default
