@@ -2,7 +2,8 @@ name: Snowflake CI/CD Deployment
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
 
 jobs:
   deploy:
@@ -10,32 +11,40 @@ jobs:
     environment: TEST
 
     steps:
+      # 1️⃣ Checkout code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # 2️⃣ Setup Python
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
 
+      # 3️⃣ Install Snowflake CLI (v2)
       - name: Install Snowflake CLI
         run: pip install snowflake-cli
 
-      # 🔥 Explicitly create connection
+      # 4️⃣ Create Snowflake Connection (CLI v2 syntax)
       - name: Create Snowflake Connection
+        env:
+          SNOWFLAKE_PASSWORD: ${{ secrets.SF_PASSWORD }}
         run: |
-          snow connection add default \
+          snow connection add \
+            --connection-name default \
             --account "${{ secrets.SF_ACCOUNT }}" \
             --user "${{ secrets.SF_USER }}" \
-            --password "${{ secrets.SF_PASSWORD }}" \
+            --password "$SNOWFLAKE_PASSWORD" \
             --role "${{ secrets.SF_ROLE }}" \
             --warehouse "${{ secrets.SF_WAREHOUSE }}" \
             --database "${{ secrets.SF_DATABASE }}" \
             --schema "${{ secrets.SF_SCHEMA }}"
 
+      # 5️⃣ Test connection
       - name: Test Snowflake Connection
         run: snow connection test --connection default
 
+      # 6️⃣ Deploy SQL scripts
       - name: Deploy SQL Scripts
         run: |
           set -e
