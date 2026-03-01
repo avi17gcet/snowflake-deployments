@@ -7,13 +7,11 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
-    # 1️⃣ THIS IS THE KEY: Point to your specific GitHub Environment
+    # 1️⃣ THIS MUST MATCH YOUR GITHUB ENVIRONMENT NAME EXACTLY
     environment: TEST
 
+    # 2️⃣ MAP THE SECRETS TO THE EXACT NAMES THE CLI EXPECTS
     env:
-      SNOWFLAKE_DEFAULT_CONNECTION_NAME: default
-      # GitHub will now look in the "production" environment for these:
       SNOWFLAKE_CONNECTIONS_DEFAULT_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
       SNOWFLAKE_CONNECTIONS_DEFAULT_USER: ${{ secrets.SF_USER }}
       SNOWFLAKE_CONNECTIONS_DEFAULT_PASSWORD: ${{ secrets.SF_PASSWORD }}
@@ -21,6 +19,8 @@ jobs:
       SNOWFLAKE_CONNECTIONS_DEFAULT_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
       SNOWFLAKE_CONNECTIONS_DEFAULT_DATABASE: ${{ secrets.SF_DATABASE }}
       SNOWFLAKE_CONNECTIONS_DEFAULT_SCHEMA: ${{ secrets.SF_SCHEMA }}
+      # This tells the CLI "don't look for a file, use the env vars above"
+      SNOWFLAKE_DEFAULT_CONNECTION_NAME: default
 
     steps:
       - name: Checkout Repository
@@ -34,13 +34,15 @@ jobs:
       - name: Install Snowflake CLI
         run: pip install snowflake-cli-labs
 
+      # 3️⃣ TEST CONNECTION
       - name: Test Snowflake Connection
         run: snow connection test
 
+      # 4️⃣ DEPLOY
       - name: Deploy SQL Scripts
         run: |
           set -e
           for file in sql/schemas/*.sql; do
-            echo "Executing $file..."
+            echo "Deploying $file..."
             snow sql -f "$file"
           done
