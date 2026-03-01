@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1 — Checkout the repository
+      # Step 1 — Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -24,16 +24,17 @@ jobs:
       - name: Install Snowflake CLI
         run: pip install snowflake-cli-labs
 
-      # Step 4 — Configure Snowflake Connection using Secrets
+      # Step 4 — Configure Snowflake Connection using GitHub Secrets
       - name: Configure Snowflake Connection
         run: |
-          snow connection add TEST \
-            --account "${{ secrets.SNOWFLAKE_ACCOUNT }}" \
-            --user "${{ secrets.SNOWFLAKE_USER }}" \
-            --password "${{ secrets.SNOWFLAKE_PASSWORD }}" \
-            --role "${{ secrets.SNOWFLAKE_ROLE }}" \
-            --warehouse "${{ secrets.SNOWFLAKE_WAREHOUSE }}" \
-            --database "${{ secrets.SNOWFLAKE_DATABASE }}" \
+          snow connection add \
+            --name TEST \
+            --account "${{ secrets.TEST_ACCOUNT }}" \
+            --user "${{ secrets.TEST_USER }}" \
+            --password "${{ secrets.TEST_PASSWORD }}" \
+            --role "${{ secrets.TEST_ROLE }}" \
+            --warehouse "${{ secrets.TEST_WAREHOUSE }}" \
+            --database "${{ secrets.TEST_DATABASE }}" \
             --default
 
       # Step 5 — Test the connection
