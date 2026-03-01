@@ -28,15 +28,15 @@ jobs:
           python-version: "3.10"
 
       - name: Install Snowflake CLI
-        run: pip install snowflake-cli-labs
+        run: pip install snowflake-cli
 
       - name: Test Snowflake Connection
-        run: snow connection test
+        run: snow connection test --connection default
 
       - name: Deploy SQL Scripts
         run: |
           set -e
           for file in sql/schemas/*.sql; do
             echo "Deploying $file..."
-            snow sql -f "$file"
+            snow sql -f "$file" --connection default
           done
