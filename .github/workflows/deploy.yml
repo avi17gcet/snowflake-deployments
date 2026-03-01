@@ -1,4 +1,3 @@
-definition_version: 1
 name: Snowflake Deployment
 
 on:
@@ -14,20 +13,27 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
       - name: Install Snowflake CLI
-        run: |
-          pip install snowflake-cli-labs
+        run: pip install snowflake-cli-labs
 
       - name: Configure Snowflake Connection
         run: |
-          snow connection add \
-            --account ${{ secrets.SNOWFLAKE_ACCOUNT }} \
-            --user ${{ secrets.SNOWFLAKE_USER }} \
-            --password ${{ secrets.SNOWFLAKE_PASSWORD }} \
-            --role ${{ secrets.SNOWFLAKE_ROLE }} \
-            --warehouse ${{ secrets.SNOWFLAKE_WAREHOUSE }} \
-            --database ${{ secrets.SNOWFLAKE_DATABASE }} \
+          snow connection add github_connection \
+            --account "${{ secrets.SNOWFLAKE_ACCOUNT }}" \
+            --user "${{ secrets.SNOWFLAKE_USER }}" \
+            --password "${{ secrets.SNOWFLAKE_PASSWORD }}" \
+            --role "${{ secrets.SNOWFLAKE_ROLE }}" \
+            --warehouse "${{ secrets.SNOWFLAKE_WAREHOUSE }}" \
+            --database "${{ secrets.SNOWFLAKE_DATABASE }}" \
             --default
+
+      - name: Test Connection
+        run: snow sql -q "SELECT CURRENT_VERSION();"
 
       - name: Deploy Schema
         run: snow sql -f sql/schemas/create_schema.sql
