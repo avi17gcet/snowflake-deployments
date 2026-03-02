@@ -10,17 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     environment: TEST
 
-    env:
-      SNOWFLAKE_CONNECTIONS_DEFAULT_HOST: ${{ secrets.SF_HOST }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_USER: ${{ secrets.SF_USER }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_AUTHENTICATOR: snowflake
-      SNOWFLAKE_CONNECTIONS_DEFAULT_TOKEN: ${{ secrets.SF_PAT }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_ROLE: ${{ secrets.SF_ROLE }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_DATABASE: ${{ secrets.SF_DATABASE }}
-      SNOWFLAKE_CONNECTIONS_DEFAULT_SCHEMA: ${{ secrets.SF_SCHEMA }}
-
     steps:
+
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -32,13 +23,49 @@ jobs:
       - name: Install Snowflake CLI
         run: pip install --upgrade snowflake-cli
 
+      # Test connection with temporary-connection
       - name: Test Snowflake Connection
-        run: snow connection test --connection default
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SF_USER }}
+          # PAT can be used here in SNOWFLAKE_PASSWORD (works like password)
+          SNOWFLAKE_PASSWORD: ${{ secrets.SF_PAT }}
+          SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
+          SNOWFLAKE_SCHEMA: ${{ secrets.SF_SCHEMA }}
+        run: |
+          snow connection test --temporary-connection \
+            --account "$SNOWFLAKE_ACCOUNT" \
+            --user "$SNOWFLAKE_USER" \
+            --authenticator "snowflake" \
+            --password "$SNOWFLAKE_PASSWORD" \
+            --role "$SNOWFLAKE_ROLE" \
+            --warehouse "$SNOWFLAKE_WAREHOUSE" \
+            --database "$SNOWFLAKE_DATABASE" \
+            --schema "$SNOWFLAKE_SCHEMA"
 
+      # Deploy SQL scripts
       - name: Deploy SQL Scripts
+        env:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
+          SNOWFLAKE_USER: ${{ secrets.SF_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SF_PAT }}
+          SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE }}
+          SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
+          SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
+          SNOWFLAKE_SCHEMA: ${{ secrets.SF_SCHEMA }}
         run: |
           set -e
           for file in sql/schemas/*.sql; do
             echo "Deploying $file..."
-            snow sql -f "$file" --connection default
+            snow sql -f "$file" --temporary-connection \
+              --account "$SNOWFLAKE_ACCOUNT" \
+              --user "$SNOWFLAKE_USER" \
+              --authenticator "snowflake" \
+              --password "$SNOWFLAKE_PASSWORD" \
+              --role "$SNOWFLAKE_ROLE" \
+              --warehouse "$SNOWFLAKE_WAREHOUSE" \
+              --database "$SNOWFLAKE_DATABASE" \
+              --schema "$SNOWFLAKE_SCHEMA"
           done
