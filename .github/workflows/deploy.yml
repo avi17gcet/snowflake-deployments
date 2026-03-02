@@ -11,7 +11,6 @@ jobs:
     environment: TEST
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -23,49 +22,32 @@ jobs:
       - name: Install Snowflake CLI
         run: pip install --upgrade snowflake-cli
 
-      # Test connection with temporary-connection
-      - name: Test Snowflake Connection
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SF_USER }}
-          # PAT can be used here in SNOWFLAKE_PASSWORD (works like password)
-          SNOWFLAKE_PASSWORD: ${{ secrets.SF_PAT }}
-          SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SF_SCHEMA }}
+      # ✅ Create config.toml exactly like your local machine
+      - name: Create Snowflake config file
         run: |
-          snow connection test --temporary-connection \
-            --account "$SNOWFLAKE_ACCOUNT" \
-            --user "$SNOWFLAKE_USER" \
-            --authenticator "snowflake" \
-            --password "$SNOWFLAKE_PASSWORD" \
-            --role "$SNOWFLAKE_ROLE" \
-            --warehouse "$SNOWFLAKE_WAREHOUSE" \
-            --database "$SNOWFLAKE_DATABASE" \
-            --schema "$SNOWFLAKE_SCHEMA"
+          mkdir -p ~/.snowflake
+          cat > ~/.snowflake/config.toml <<EOF
+          default_connection_name = "my_connection"
 
-      # Deploy SQL scripts
+          [connections.my_connection]
+          account = "${{ secrets.SF_ACCOUNT }}"
+          user = "${{ secrets.SF_USER }}"
+          password = "${{ secrets.SF_PASSWORD }}"
+          role = "${{ secrets.SF_ROLE }}"
+          warehouse = "${{ secrets.SF_WAREHOUSE }}"
+          database = "${{ secrets.SF_DATABASE }}"
+          schema = "${{ secrets.SF_SCHEMA }}"
+          EOF
+
+      # ✅ Test connection
+      - name: Test Snowflake Connection
+        run: snow connection test --connection my_connection
+
+      # ✅ Deploy SQL files
       - name: Deploy SQL Scripts
-        env:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.SF_ACCOUNT }}
-          SNOWFLAKE_USER: ${{ secrets.SF_USER }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SF_PAT }}
-          SNOWFLAKE_ROLE: ${{ secrets.SF_ROLE }}
-          SNOWFLAKE_WAREHOUSE: ${{ secrets.SF_WAREHOUSE }}
-          SNOWFLAKE_DATABASE: ${{ secrets.SF_DATABASE }}
-          SNOWFLAKE_SCHEMA: ${{ secrets.SF_SCHEMA }}
         run: |
           set -e
           for file in sql/schemas/*.sql; do
             echo "Deploying $file..."
-            snow sql -f "$file" --temporary-connection \
-              --account "$SNOWFLAKE_ACCOUNT" \
-              --user "$SNOWFLAKE_USER" \
-              --authenticator "snowflake" \
-              --password "$SNOWFLAKE_PASSWORD" \
-              --role "$SNOWFLAKE_ROLE" \
-              --warehouse "$SNOWFLAKE_WAREHOUSE" \
-              --database "$SNOWFLAKE_DATABASE" \
-              --schema "$SNOWFLAKE_SCHEMA"
+            snow sql -f "$file" --connection my_connection
           done
