@@ -1,0 +1,8 @@
+[my_connection]
+account = "cwfidqm-ur07558"
+user = "avi17gcet"
+password = "Jurasic@12345678"
+role = "ACCOUNTADMIN"
+warehouse = "COMPUTE_WH"
+database = "AI_TEST_DB"
+schema = "PUBLIC"
