@@ -22,7 +22,7 @@ jobs:
       - name: Install Snowflake CLI
         run: pip install --upgrade snowflake-cli
 
-      # ✅ Create secure config.toml
+      # Create secure config.toml
       - name: Create Snowflake config file
         run: |
           mkdir -p ~/.snowflake
@@ -39,7 +39,7 @@ jobs:
           schema = "${{ secrets.SF_SCHEMA }}"
           EOF
 
-          # 🔒 FIX PERMISSIONS (required by Snowflake)
+          # FIX PERMISSIONS (required by Snowflake)
           chmod 600 ~/.snowflake/config.toml
 
       - name: Test Snowflake Connection
